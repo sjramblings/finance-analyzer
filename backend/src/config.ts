@@ -21,9 +21,7 @@ export const config = {
     dir: process.env.REPORTS_DIR || path.join(__dirname, '../../data/reports'),
   },
   cors: {
-    origin: process.env.CORS_ORIGIN?.split(',') || [
-      'http://localhost:5173',
-      'http://localhost:5174',
-    ],
+    origin: true,
+    credentials: true,
   },
 };

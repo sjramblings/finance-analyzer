@@ -13,16 +13,25 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(date: string | Date): string {
+  if (!date) return 'N/A';
+  const dateObj = new Date(date);
+  if (isNaN(dateObj.getTime())) return 'Invalid date';
+
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  }).format(new Date(date));
+  }).format(dateObj);
 }
 
 export function formatRelativeTime(date: string | Date): string {
+  if (!date) return 'N/A';
+
   const now = new Date();
   const then = new Date(date);
+
+  if (isNaN(then.getTime())) return 'Invalid date';
+
   const diffInSeconds = Math.floor((now.getTime() - then.getTime()) / 1000);
 
   if (diffInSeconds < 60) return 'just now';
