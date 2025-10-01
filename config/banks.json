@@ -1,0 +1,9 @@
+{
+  "supported": [
+    {
+      "name": "Chase",
+      "formats": ["CSV"],
+      "description": "Chase Bank checking and credit card statements"
+    }
+  ]
+}

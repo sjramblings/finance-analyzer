@@ -1,0 +1,19 @@
+[
+  { "name": "Groceries", "icon": "🛒", "color": "#10b981" },
+  { "name": "Dining Out", "icon": "🍽️", "color": "#f59e0b" },
+  { "name": "Transportation", "icon": "🚗", "color": "#3b82f6" },
+  { "name": "Entertainment", "icon": "🎬", "color": "#8b5cf6" },
+  { "name": "Shopping", "icon": "🛍️", "color": "#ec4899" },
+  { "name": "Utilities", "icon": "💡", "color": "#6366f1" },
+  { "name": "Healthcare", "icon": "🏥", "color": "#14b8a6" },
+  { "name": "Insurance", "icon": "🛡️", "color": "#06b6d4" },
+  { "name": "Housing", "icon": "🏠", "color": "#64748b" },
+  { "name": "Personal Care", "icon": "💅", "color": "#d946ef" },
+  { "name": "Education", "icon": "📚", "color": "#84cc16" },
+  { "name": "Gifts & Donations", "icon": "🎁", "color": "#f43f5e" },
+  { "name": "Travel", "icon": "✈️", "color": "#0ea5e9" },
+  { "name": "Subscriptions", "icon": "📱", "color": "#a855f7" },
+  { "name": "Income", "icon": "💰", "color": "#22c55e" },
+  { "name": "Transfers", "icon": "🔄", "color": "#94a3b8" },
+  { "name": "Other", "icon": "📋", "color": "#71717a" }
+]
