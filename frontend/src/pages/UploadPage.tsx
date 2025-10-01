@@ -57,14 +57,20 @@ export function UploadPage() {
 
       const result = await uploadApi.uploadCSV(file);
 
-      setUploadStatus(`✅ Successfully processed ${result.transactionsCount} transactions!`);
+      setUploadStatus(`✅ Successfully uploaded ${result.transactionsCount} transactions!\n\nNote: AI-powered categorization is unavailable (requires Anthropic API credits). Transactions will need to be categorized manually.`);
       setFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload failed:', error);
-      setUploadStatus('❌ Upload failed. Please check the file format and try again.');
+
+      const errorMessage = error?.response?.data?.message || error?.message || 'Unknown error';
+      if (errorMessage.includes('credit') || errorMessage.includes('API')) {
+        setUploadStatus('⚠️ File uploaded but AI categorization is unavailable.\n\nThis feature requires Anthropic API credits. Transactions have been imported but will need manual categorization.');
+      } else {
+        setUploadStatus('❌ Upload failed. Please check the file format and try again.\n\nError: ' + errorMessage);
+      }
     } finally {
       setUploading(false);
     }

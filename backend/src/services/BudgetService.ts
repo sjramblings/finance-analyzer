@@ -53,6 +53,31 @@ export class BudgetService {
     }
   }
 
+  async getActiveBudgets() {
+    const today = new Date().toISOString().split('T')[0];
+    const budgets = await this.budgetRepo.findActiveBudgets(today);
+
+    // Get spending for each budget
+    const result = [];
+    for (const budget of budgets) {
+      const { transactions } = await this.transactionRepo.findAll({
+        category_id: budget.category_id,
+      });
+
+      const spent = Math.abs(transactions
+        .filter(t => t.transaction_type === 'debit')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0));
+
+      result.push({
+        ...budget,
+        spent,
+        remaining: budget.amount - spent,
+      });
+    }
+
+    return result;
+  }
+
   async getBudgetStatus(month?: string) {
     const date = month || new Date().toISOString().slice(0, 7); // YYYY-MM
     const startDate = `${date}-01`;

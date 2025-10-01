@@ -22,8 +22,8 @@ export function HomePage() {
         categoriesApi.getAll(),
         transactionsApi.getStats(),
       ]);
-      setCategories(categoriesRes.data);
-      setStats(statsRes.data);
+      setCategories(categoriesRes);
+      setStats(statsRes);
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
     } finally {

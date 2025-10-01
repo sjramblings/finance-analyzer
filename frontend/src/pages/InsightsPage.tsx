@@ -31,8 +31,18 @@ export function InsightsPage() {
       setGenerating(true);
       await insightsApi.generate();
       await loadInsights();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to generate insights:', error);
+
+      // Show friendly error message
+      const errorInsight: Insight = {
+        id: Date.now(),
+        type: 'opportunity',
+        insight: '⚠️ Unable to generate AI insights at this time.\n\nThis feature requires Anthropic API credits. To use AI-powered insights, please add credits to your Anthropic account.\n\nIn the meantime, you can:\n• View your transaction history\n• Set up budgets by category\n• Track your spending manually',
+        metadata: {},
+        createdAt: new Date().toISOString(),
+      };
+      setInsights([errorInsight]);
     } finally {
       setGenerating(false);
     }
@@ -104,6 +114,10 @@ export function InsightsPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Our AI will identify subscriptions, anomalies, trends, and opportunities to save
               </p>
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm max-w-md mx-auto">
+                <p className="font-medium">⚠️ AI Features Require Credits</p>
+                <p className="mt-1">Insight generation uses the Anthropic API and requires credits to function.</p>
+              </div>
               <Button size="lg" onClick={handleGenerate} disabled={generating}>
                 {generating ? 'Analyzing...' : 'Generate Insights'}
               </Button>

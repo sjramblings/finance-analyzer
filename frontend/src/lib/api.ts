@@ -13,22 +13,28 @@ const api = axios.create({
   },
 });
 
+// Add response interceptor to unwrap data
+api.interceptors.response.use(
+  (response) => response.data,
+  (error) => Promise.reject(error)
+);
+
 // Transactions
 export const transactionsApi = {
   getAll: (filter?: TransactionFilter) =>
-    api.get<TransactionsResponse>('/transactions', { params: filter }),
+    api.get('/transactions', { params: filter }) as Promise<TransactionsResponse>,
 
   getById: (id: number) =>
-    api.get<Transaction>(`/transactions/${id}`),
+    api.get(`/transactions/${id}`) as Promise<Transaction>,
 
   getStats: (startDate?: string, endDate?: string) =>
-    api.get<TransactionStats>('/transactions/stats', { params: { startDate, endDate } }),
+    api.get('/transactions/stats', { params: { startDate, endDate } }) as Promise<TransactionStats>,
 
   update: (id: number, data: Partial<Transaction>) =>
-    api.put<Transaction>(`/transactions/${id}`, data),
+    api.put(`/transactions/${id}`, data) as Promise<Transaction>,
 
   updateCategory: (id: number, categoryId: number) =>
-    api.put<Transaction>(`/transactions/${id}/category`, { category_id: categoryId }),
+    api.put(`/transactions/${id}/category`, { category_id: categoryId }) as Promise<Transaction>,
 
   delete: (id: number) =>
     api.delete(`/transactions/${id}`),
@@ -37,16 +43,16 @@ export const transactionsApi = {
 // Categories
 export const categoriesApi = {
   getAll: () =>
-    api.get<Category[]>('/categories'),
+    api.get('/categories') as Promise<Category[]>,
 
   getById: (id: number) =>
-    api.get<Category>(`/categories/${id}`),
+    api.get(`/categories/${id}`) as Promise<Category>,
 
   create: (data: Category) =>
-    api.post<Category>('/categories', data),
+    api.post('/categories', data) as Promise<Category>,
 
   update: (id: number, data: Partial<Category>) =>
-    api.put<Category>(`/categories/${id}`, data),
+    api.put(`/categories/${id}`, data) as Promise<Category>,
 
   delete: (id: number) =>
     api.delete(`/categories/${id}`),
@@ -57,15 +63,15 @@ export const uploadApi = {
   uploadCSV: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post<{ jobId: string }>('/upload', formData, {
+    return api.post('/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-    });
+    }) as Promise<{ jobId: string; transactionsCount: number }>;
   },
 
   getJobStatus: (jobId: string) =>
-    api.get<UploadJob>(`/upload/${jobId}/status`),
+    api.get(`/upload/${jobId}/status`) as Promise<UploadJob>,
 
   confirmUpload: (jobId: string, corrections?: { transactionId: number; categoryId: number }[]) =>
     api.post(`/upload/${jobId}/confirm`, { corrections }),
@@ -74,19 +80,19 @@ export const uploadApi = {
 // Budget
 export const budgetApi = {
   getAll: () =>
-    api.get<Budget[]>('/budget'),
+    api.get('/budget') as Promise<Budget[]>,
 
   getActive: () =>
-    api.get<BudgetStatus[]>('/budget/active'),
+    api.get('/budget/active') as Promise<BudgetStatus[]>,
 
   getStatus: (month?: string) =>
-    api.get<BudgetStatus>('/budget/status', { params: { month } }),
+    api.get('/budget/status', { params: { month } }) as Promise<BudgetStatus>,
 
   create: (data: { categoryId: number; amount: number; period: string }) =>
-    api.post<Budget>('/budget', data),
+    api.post('/budget', data) as Promise<Budget>,
 
   update: (categoryId: number, amount: number, period: 'monthly' | 'quarterly' | 'yearly') =>
-    api.put<Budget>(`/budget/${categoryId}`, { amount, period }),
+    api.put(`/budget/${categoryId}`, { amount, period }) as Promise<Budget>,
 
   delete: (id: number) =>
     api.delete(`/budget/${id}`),
@@ -95,10 +101,10 @@ export const budgetApi = {
 // Insights
 export const insightsApi = {
   getAll: (dismissed?: boolean) =>
-    api.get<Insight[]>('/insights', { params: { dismissed } }),
+    api.get('/insights', { params: { dismissed } }) as Promise<Insight[]>,
 
   generate: () =>
-    api.post<{ generated: number; insights: Insight[] }>('/insights/generate'),
+    api.post('/insights/generate') as Promise<{ generated: number; insights: Insight[] }>,
 
   dismiss: (id: number) =>
     api.put(`/insights/${id}/dismiss`),
@@ -110,16 +116,16 @@ export const insightsApi = {
 // Chat
 export const chatApi = {
   createSession: () =>
-    api.post<ChatSession>('/chat/sessions'),
+    api.post('/chat/sessions') as Promise<ChatSession>,
 
   sendMessage: (sessionId: number, message: string) =>
-    api.post<{ userMessage: ChatMessage; assistantMessage: ChatMessage }>('/chat', { message, sessionId }),
+    api.post('/chat', { message, sessionId }) as Promise<{ userMessage: ChatMessage; assistantMessage: ChatMessage }>,
 
   getSessions: () =>
-    api.get<ChatSession[]>('/chat/sessions'),
+    api.get('/chat/sessions') as Promise<ChatSession[]>,
 
   getMessages: (sessionId: number) =>
-    api.get<ChatMessage[]>(`/chat/sessions/${sessionId}`),
+    api.get(`/chat/sessions/${sessionId}`) as Promise<ChatMessage[]>,
 
   deleteSession: (sessionId: number) =>
     api.delete(`/chat/sessions/${sessionId}`),

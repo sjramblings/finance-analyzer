@@ -27,10 +27,12 @@ export function TransactionsPage() {
         transactionsApi.getAll(filter),
         categoriesApi.getAll()
       ]);
-      setTransactions(txData.transactions);
-      setCategories(catData);
+      setTransactions(txData.transactions || []);
+      setCategories(Array.isArray(catData) ? catData : []);
     } catch (error) {
       console.error('Failed to load data:', error);
+      setTransactions([]);
+      setCategories([]);
     } finally {
       setLoading(false);
     }

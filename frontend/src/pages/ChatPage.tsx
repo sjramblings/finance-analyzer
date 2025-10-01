@@ -75,8 +75,18 @@ export function ChatPage() {
     try {
       const response = await chatApi.sendMessage(activeSessionId, userMessage);
       setMessages([...messages, response.userMessage, response.assistantMessage]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to send message:', error);
+
+      // Add error message to chat
+      const errorMessage: ChatMessage = {
+        id: Date.now(),
+        sessionId: activeSessionId,
+        role: 'assistant',
+        content: '⚠️ Unable to process your message. This feature requires Anthropic API credits. Please add credits to your account to use the AI chat assistant.',
+        createdAt: new Date().toISOString(),
+      };
+      setMessages([...messages, errorMessage]);
     } finally {
       setLoading(false);
     }
@@ -152,6 +162,10 @@ export function ChatPage() {
                     <p className="text-sm mt-2">
                       Try: "How much did I spend on dining last month?"
                     </p>
+                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm max-w-md mx-auto">
+                      <p className="font-medium">⚠️ AI Features Require Credits</p>
+                      <p className="mt-1">This chat assistant uses the Anthropic API and requires credits to function.</p>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
