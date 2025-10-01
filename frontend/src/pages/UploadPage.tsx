@@ -55,9 +55,29 @@ export function UploadPage() {
       setUploading(true);
       setUploadStatus('Uploading and processing transactions...');
 
-      const result = await uploadApi.uploadCSV(file);
+      // Upload file
+      const uploadResult = await uploadApi.uploadCSV(file);
+      const jobId = uploadResult.jobId;
 
-      setUploadStatus(`✅ Successfully uploaded ${result.transactionsCount} transactions!\n\nNote: AI-powered categorization is unavailable (requires Anthropic API credits). Transactions will need to be categorized manually.`);
+      // Poll for completion
+      setUploadStatus('Processing CSV and categorizing transactions with AI...');
+      let job = await uploadApi.getJobStatus(jobId);
+
+      while (job.status === 'pending' || job.status === 'processing') {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        job = await uploadApi.getJobStatus(jobId);
+      }
+
+      if (job.status === 'failed') {
+        throw new Error(job.error_message || 'Upload failed');
+      }
+
+      // Confirm upload to save to database
+      setUploadStatus('Saving transactions to database...');
+      await uploadApi.confirmUpload(jobId);
+
+      const count = job.total_transactions || 0;
+      setUploadStatus(`✅ Successfully uploaded and categorized ${count} transactions!\n\nTransactions have been automatically categorized using AI.`);
       setFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -66,7 +86,7 @@ export function UploadPage() {
       console.error('Upload failed:', error);
 
       const errorMessage = error?.response?.data?.message || error?.message || 'Unknown error';
-      if (errorMessage.includes('credit') || errorMessage.includes('API')) {
+      if (errorMessage.includes('credit') || errorMessage.includes('API') || errorMessage.includes('ANTHROPIC')) {
         setUploadStatus('⚠️ File uploaded but AI categorization is unavailable.\n\nThis feature requires Anthropic API credits. Transactions have been imported but will need manual categorization.');
       } else {
         setUploadStatus('❌ Upload failed. Please check the file format and try again.\n\nError: ' + errorMessage);

@@ -1,17 +1,38 @@
 import { InsightRepository, Insight } from '../db/repositories/InsightRepository.js';
 import { AgentService } from './AgentService.js';
+import { BedrockAgentService } from './BedrockAgentService.js';
 import { TransactionRepository, TransactionFilter } from '../db/repositories/TransactionRepository.js';
 import { db } from '../db/database.js';
+import { config } from '../config.js';
 
 export class InsightService {
   private insightRepo: InsightRepository;
   private transactionRepo: TransactionRepository;
-  private agentService: AgentService;
+  private agentService: AgentService | BedrockAgentService | null;
 
   constructor() {
     this.insightRepo = new InsightRepository(db);
     this.transactionRepo = new TransactionRepository(db);
-    this.agentService = new AgentService();
+
+    // Initialize AI service based on available configuration
+    // Priority: AWS Bedrock > Direct Anthropic API > None
+    this.agentService = null;
+
+    try {
+      // Try AWS Bedrock first if AWS region is configured
+      if (config.aws.region) {
+        this.agentService = new BedrockAgentService();
+        console.log('InsightService: Using AWS Bedrock for AI features');
+      }
+      // Fall back to direct Anthropic API
+      else if (config.anthropicApiKey) {
+        this.agentService = new AgentService();
+        console.log('InsightService: Using Direct Anthropic API for AI features');
+      }
+    } catch (error) {
+      console.warn('InsightService: AI service not available:', error);
+      this.agentService = null;
+    }
   }
 
   async getAllInsights(dismissed?: boolean) {
@@ -19,16 +40,22 @@ export class InsightService {
   }
 
   async generateInsights() {
-    // Get recent transactions (last 90 days)
-    const endDate = new Date().toISOString().split('T')[0];
-    const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    // Check if AI service is available
+    if (!this.agentService) {
+      throw new Error('AI service is not configured. Please set up ANTHROPIC_API_KEY or AWS credentials.');
+    }
 
-    const filter: TransactionFilter = {
-      startDate,
-      endDate,
-    };
+    // Get all transactions to analyze
+    const { transactions } = await this.transactionRepo.findAll({});
 
-    const { transactions } = await this.transactionRepo.findAll(filter);
+    if (transactions.length === 0) {
+      throw new Error('No transactions found. Please upload transactions first.');
+    }
+
+    // Get date range from actual transactions
+    const dates = transactions.map(t => new Date(t.date).getTime());
+    const startDate = new Date(Math.min(...dates)).toISOString().split('T')[0];
+    const endDate = new Date(Math.max(...dates)).toISOString().split('T')[0];
 
     // Use agent to analyze spending
     const analysis = await this.agentService.analyzeSpending(startDate, endDate, transactions);

@@ -9,7 +9,19 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
+
+  // AI Provider Configuration
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
+
+  // AWS Bedrock Configuration
+  aws: {
+    region: process.env.AWS_REGION || '',
+    profile: process.env.AWS_PROFILE || '',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    sessionToken: process.env.AWS_SESSION_TOKEN || '',
+  },
+
   database: {
     path: process.env.DB_PATH || path.join(__dirname, '../../data/transactions.db'),
   },

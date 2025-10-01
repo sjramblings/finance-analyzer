@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Select } from '../components/ui/select';
 import { insightsApi } from '../lib/api';
 import { Insight } from '../types/api';
 import { formatRelativeTime } from '../lib/utils';
@@ -9,6 +10,7 @@ export function InsightsPage() {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [days, setDays] = useState<number>(30);
 
   useEffect(() => {
     loadInsights();
@@ -29,7 +31,7 @@ export function InsightsPage() {
   const handleGenerate = async () => {
     try {
       setGenerating(true);
-      await insightsApi.generate();
+      await insightsApi.generate(days);
       await loadInsights();
     } catch (error: any) {
       console.error('Failed to generate insights:', error);
@@ -37,10 +39,10 @@ export function InsightsPage() {
       // Show friendly error message
       const errorInsight: Insight = {
         id: Date.now(),
-        type: 'opportunity',
-        insight: '⚠️ Unable to generate AI insights at this time.\n\nThis feature requires Anthropic API credits. To use AI-powered insights, please add credits to your Anthropic account.\n\nIn the meantime, you can:\n• View your transaction history\n• Set up budgets by category\n• Track your spending manually',
-        metadata: {},
-        createdAt: new Date().toISOString(),
+        type: 'recommendation',
+        title: '⚠️ Unable to generate AI insights',
+        description: 'This feature requires Anthropic API credits. To use AI-powered insights, please add credits to your Anthropic account.\n\nIn the meantime, you can:\n• View your transaction history\n• Set up budgets by category\n• Track your spending manually',
+        created_at: new Date().toISOString(),
       };
       setInsights([errorInsight]);
     } finally {
@@ -77,7 +79,7 @@ export function InsightsPage() {
     }
   };
 
-  const activeInsights = insights.filter(i => !i.dismissedAt);
+  const activeInsights = insights.filter(i => !i.is_dismissed);
 
   return (
     <div className="space-y-8">
@@ -88,9 +90,23 @@ export function InsightsPage() {
             AI-powered analysis of your spending patterns
           </p>
         </div>
-        <Button onClick={handleGenerate} disabled={generating} size="lg">
-          {generating ? 'Analyzing...' : 'Generate New Insights'}
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col">
+            <label className="text-xs text-muted-foreground mb-1">Time Period</label>
+            <Select
+              value={days.toString()}
+              onChange={(e) => setDays(parseInt(e.target.value))}
+              className="w-32"
+            >
+              <option value="30">30 Days</option>
+              <option value="60">60 Days</option>
+              <option value="90">90 Days</option>
+            </Select>
+          </div>
+          <Button onClick={handleGenerate} disabled={generating} size="lg" className="mt-5">
+            {generating ? 'Analyzing...' : 'Generate Insights'}
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -133,9 +149,9 @@ export function InsightsPage() {
                   <div className="flex items-start gap-3">
                     <span className="text-3xl">{getTypeIcon(insight.type)}</span>
                     <div>
-                      <CardTitle className="capitalize">{insight.type}</CardTitle>
+                      <CardTitle>{insight.title}</CardTitle>
                       <CardDescription className="mt-1">
-                        {formatRelativeTime(insight.createdAt)}
+                        {formatRelativeTime(insight.created_at)}
                       </CardDescription>
                     </div>
                   </div>
@@ -150,44 +166,51 @@ export function InsightsPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {insight.insight}
+                  {insight.description}
                 </p>
-                {insight.metadata && Object.keys(insight.metadata).length > 0 && (
-                  <div className="mt-4 p-3 bg-white/50 rounded-lg">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Details:</p>
-                    <div className="text-xs space-y-1">
-                      {Object.entries(insight.metadata).map(([key, value]) => (
-                        <div key={key}>
-                          <span className="font-medium capitalize">{key.replace(/_/g, ' ')}:</span>{' '}
-                          <span>{String(value)}</span>
+                {insight.metadata && (() => {
+                  try {
+                    const meta = typeof insight.metadata === 'string' ? JSON.parse(insight.metadata) : insight.metadata;
+                    return Object.keys(meta).length > 0 ? (
+                      <div className="mt-4 p-3 bg-white/50 rounded-lg">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Details:</p>
+                        <div className="text-xs space-y-1">
+                          {Object.entries(meta).map(([key, value]) => (
+                            <div key={key}>
+                              <span className="font-medium capitalize">{key.replace(/_/g, ' ')}:</span>{' '}
+                              <span>{String(value)}</span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      </div>
+                    ) : null;
+                  } catch {
+                    return null;
+                  }
+                })()}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
 
-      {insights.filter(i => i.dismissedAt).length > 0 && (
+      {insights.filter(i => i.is_dismissed).length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Dismissed Insights</CardTitle>
             <CardDescription>
-              Previously dismissed insights ({insights.filter(i => i.dismissedAt).length})
+              Previously dismissed insights ({insights.filter(i => i.is_dismissed).length})
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {insights.filter(i => i.dismissedAt).map((insight) => (
+              {insights.filter(i => i.is_dismissed).map((insight) => (
                 <div key={insight.id} className="p-3 bg-muted/50 rounded-lg opacity-60">
                   <div className="flex items-center gap-2">
                     <span>{getTypeIcon(insight.type)}</span>
-                    <span className="text-sm capitalize font-medium">{insight.type}</span>
+                    <span className="text-sm font-medium">{insight.title}</span>
                     <span className="text-xs text-muted-foreground">
-                      - {insight.insight.substring(0, 100)}...
+                      - {insight.description?.substring(0, 100)}...
                     </span>
                   </div>
                 </div>

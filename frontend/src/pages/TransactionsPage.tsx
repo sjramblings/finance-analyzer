@@ -134,8 +134,8 @@ export function TransactionsPage() {
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center gap-1">
-                        <span>{getCategoryIcon(transaction.categoryId)}</span>
-                        <span>{getCategoryName(transaction.categoryId)}</span>
+                        <span>{getCategoryIcon(transaction.category_id)}</span>
+                        <span>{getCategoryName(transaction.category_id)}</span>
                       </span>
                     </TableCell>
                     <TableCell className={`text-right font-medium ${

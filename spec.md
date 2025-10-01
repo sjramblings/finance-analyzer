@@ -14,7 +14,9 @@ A local web application that uses the Claude Agent SDK to analyze personal finan
 - **Frontend**: React 18 + TypeScript + Vite
 - **Backend**: Node.js + Express + TypeScript
 - **Database**: SQLite3
-- **AI Agent**: Claude Agent SDK (@anthropic-ai/claude-code)
+- **AI Integration**:
+  - Direct Anthropic API (@anthropic-ai/sdk)
+  - AWS Bedrock (@anthropic-ai/bedrock-sdk) - supports Claude models via AWS
 - **UI Components**: Tailwind CSS + shadcn/ui
 - **Charts**: Recharts
 - **Real-time**: WebSocket (ws library)
@@ -600,7 +602,48 @@ Response: { success: boolean }
 
 ---
 
-## Claude Agent SDK Integration
+## AI Integration
+
+### Supported Providers
+
+The application supports two ways to access Claude AI models:
+
+1. **Direct Anthropic API** - Use your Anthropic API key
+   - Configuration: `ANTHROPIC_API_KEY` environment variable
+   - Best for: Direct access to Anthropic's API
+   - Package: `@anthropic-ai/sdk`
+
+2. **AWS Bedrock** - Access Claude models through AWS
+   - Configuration: AWS credentials (access key, secret key, region)
+   - Best for: Enterprise deployments, AWS-integrated environments
+   - Package: `@anthropic-ai/bedrock-sdk`
+   - Supported models: `anthropic.claude-3-5-sonnet-20241022-v2:0`, `global.anthropic.claude-sonnet-4-5-20250929-v1:0`
+
+The system automatically detects which provider to use based on available configuration:
+- If AWS credentials are configured (AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY), uses AWS Bedrock
+- Otherwise, falls back to direct Anthropic API if ANTHROPIC_API_KEY is set
+- If neither is configured, AI features are disabled gracefully
+
+### Environment Configuration
+
+```bash
+# Option 1: Direct Anthropic API
+ANTHROPIC_API_KEY=sk-ant-xxx
+
+# Option 2: AWS Bedrock
+AWS_REGION=us-west-2
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
+# Optional for temporary credentials:
+AWS_SESSION_TOKEN=...
+
+# Option 3: AWS Default Credentials
+# Leave AWS keys blank to use default AWS credential providers:
+# - ~/.aws/credentials
+# - EC2 instance profile
+# - ECS task role
+AWS_REGION=us-west-2
+```
 
 ### Agent Configurations
 

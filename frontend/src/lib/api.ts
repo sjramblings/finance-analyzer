@@ -103,8 +103,8 @@ export const insightsApi = {
   getAll: (dismissed?: boolean) =>
     api.get('/insights', { params: { dismissed } }) as Promise<Insight[]>,
 
-  generate: () =>
-    api.post('/insights/generate') as Promise<{ generated: number; insights: Insight[] }>,
+  generate: (days?: number) =>
+    api.post('/insights/generate', { days }) as Promise<{ generated: number; insights: Insight[] }>,
 
   dismiss: (id: number) =>
     api.put(`/insights/${id}/dismiss`),
